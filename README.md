@@ -104,36 +104,6 @@ Dodatkowo:
 
 ---
 
-## Wymagania
-
-**Wersja przenośna (EXE):** Windows 10/11, 64-bit. Nie trzeba instalować Pythona.
-
-**Uruchomienie ze źródeł:** Python 3.10+ oraz biblioteki:
-
-```
-python-docx==1.2.0
-reportlab==5.1.0
-Pillow==12.3.0
-pyinstaller==6.22.3   # tylko do budowania EXE
-```
-
----
-
-## Uruchomienie
-
-```powershell
-# wersja przenośna
-.\dist\PAB-cyfrowa.exe
-
-# ze źródeł
-python src\main.py
-
-# ze źródłami przykładowymi (do prezentacji)
-python src\main.py --demo
-```
-
----
-
 ## Jak korzystać
 
 Pracę rozpoczyna **Pulpit**, który pokazuje postęp wypełnienia danych, listę
@@ -199,134 +169,12 @@ treści i numeracja stron są wyliczane automatycznie.
 
 ---
 
-## Budowanie pliku EXE
-
-```powershell
-.\build.ps1
-```
-
-Skrypt generuje ikonę (`build\_icon.py`), uruchamia testy dymne i buduje
-`dist\PAB-cyfrowa.exe` na podstawie `build\PAB-cyfrowa.spec`. Plik jest samodzielny –
-wystarczy skopiować go na inny komputer z systemem Windows.
-
-Ręcznie:
-
-```powershell
-python build\_icon.py
-python -m PyInstaller --noconfirm --clean --distpath dist --workpath build\pyi build\PAB-cyfrowa.spec
-```
-
-Weryfikacja zbudowanego pliku (bez interfejsu):
-
-```powershell
-$p = Start-Process .\dist\PAB-cyfrowa.exe -ArgumentList "--selftest" -Wait -PassThru
-$p.ExitCode   # 0 = dokumenty wygenerowane poprawnie
-```
-
-Wersję pliku można sprawdzić przez `--version` lub we właściwościach EXE
-(*Szczegóły → Wersja pliku*).
-
----
-
 ## Licencja
 
 Program działa **30 dni w trybie próbnym** liczonym od pierwszego uruchomienia.
 Po upływie tego terminu dalsza praca wymaga **klucza licencyjnego** otrzymanego
 od autora. Klucz jest sprawdzany w całości lokalnie – aktywacja nie wymaga
 połączenia z internetem.
-
-### Klucz licencyjny
-
-Klucz ma postać:
-
-```
-PAB-XXXX-XXXX-XXXX-XXXX-XXXX
-```
-
-i zawiera numer seryjny oraz informację o ważności: **liczbę dni liczoną od dnia
-aktywacji**, datę końcową albo informację, że jest bezterminowy. Podpis
-kryptograficzny (HMAC-SHA256) obejmuje całą treść klucza, więc jego ręczna edycja
-powoduje odrzucenie. Klucz można wkleić w dowolnej postaci – wielkość liter
-i separatory nie mają znaczenia.
-
-Klucz terminowy „od aktywacji” nie przedawnia się w chwili sprzedaży – okres
-liczenia zaczyna się dopiero przy pierwszej aktywacji na komputerze użytkownika.
-Ponowne wpisanie tego samego klucza nie rozpoczyna nowego okresu; przedłużenie
-wymaga nowego klucza (kolejnego numeru seryjnego).
-
-### Aktywacja
-
-1. Uruchom program – po wygaśnięciu okresu próbnego pojawi się okno
-   **Aktywacja licencji**.
-2. Wklej klucz w polu *Klucz licencyjny* (przycisk **Wklej** ze schowka).
-3. Opcjonalnie wpisz *Licencjobiorcę* (nazwę pracowni lub osoby).
-4. Naciśnij **Aktywuj klucz**.
-
-Stan licencji jest widoczny na pasku stanu, na stronie **O programie** oraz
-w oknie *Pomoc → Licencja…*, gdzie można też aktywować nowy klucz.
-
-### Gdzie zapisywany jest stan
-
-Stan licencji trafia do pliku `%APPDATA%\PABcyfrowa\license.json` i dodatkowo
-do rejestru użytkownika (`HKCU\Software\BIM architects & consultants\PAB cyfrowa`).
-Kopia w rejestrze oraz zapis daty ostatniego uruchomienia utrudniają
-„zresetowanie” okresu próbnego przez usunięcie pliku lub cofnięcie zegara.
-
-### Generowanie kluczy (tylko autor)
-
-Klucze generuje narzędzie `tools\keygen.py` – nie jest ono dołączane do pliku EXE:
-
-```powershell
-python tools\keygen.py                       # klucz bezterminowy
-python tools\keygen.py --days 365            # rok od dnia aktywacji
-python tools\keygen.py --days 30 --count 5   # pięć kluczy 30-dniowych
-python tools\keygen.py --days 365 --fixed    # rok od dziś (wygasa w dacie)
-python tools\keygen.py --check PAB-...       # sprawdzenie klucza
-
-# 1000 kluczy rocznych (od aktywacji) zapisanych do pliku CSV
-python tools\keygen.py --days 365 --count 1000 --serial 1001 --out klucze\klucze.csv
-```
-
-Domyślnie `--days` oznacza liczbę dni **od dnia aktywacji**; opcja `--fixed`
-przywraca liczenie od daty wygenerowania klucza. Narzędzie wypisuje gotowe klucze
-wraz z numerem seryjnym i rodzajem ważności albo – z opcją `--out` – zapisuje je
-do pliku CSV, który otwiera się w Excelu (kolumny: klucz, numer seryjny, ważność).
-Plik z kluczami należy przechowywać poufnie – każdy klucz z tej listy aktywuje
-program.
-
----
-
-## Struktura projektu
-
-```
-src\
-  content.py      model danych, teksty dokumentów, bilans, walidacja
-  exporters.py    eksport DOCX / PDF / TXT, spis treści, numeracja stron
-  license.py      okres próbny, klucze licencyjne, zapis stanu licencji
-  theme.py        paleta barw, style ttk i pasek nagłówka (zieleń + złoto)
-  ui_specs.py     definicje pól formularzy i stałe interfejsu
-  ui.py           okno główne, zakładki, edytory bilansu i obiektów, okno licencji
-  main.py         punkt wejścia, DPI, obsługa błędów, --demo / --selftest
-tools\
-  keygen.py       generator kluczy licencyjnych (tylko dla autora)
-assets\
-  icon.ico, icon.png
-build\
-  PAB-cyfrowa.spec        specyfikacja PyInstallera
-  version_info.txt        zasoby wersji pliku EXE
-  _smoke.py               test silnika treści
-  _smoke_export.py        test eksportu DOCX/PDF/TXT
-  _smoke_ui.py            test interfejsu, bilansu i eksportu z GUI
-  _probe_friendly.py      test pulpitu, zależności, pomocy i kopii roboczej
-  _smoke_license.py       test okresu próbnego i kluczy licencyjnych
-  _probe_license_ui.py    test okna licencji i blokady startu
-  _geom_ui.py             kontrola geometrii interfejsu (szerokości i tabele)
-  _pdfqa.py, _docxqa.py, _words.py   kontrole jakości dokumentów
-dist\
-  PAB-cyfrowa.exe
-```
-
----
 
 ## Uwagi
 
